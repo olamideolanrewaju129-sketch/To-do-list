@@ -9,21 +9,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggleBtn = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
 
-    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let tasks = [];
+    try {
+        const savedTasks = localStorage.getItem('tasks');
+        if (savedTasks) {
+            tasks = JSON.parse(savedTasks);
+        }
+    } catch (e) {
+        console.warn('Could not load tasks (localStorage may be disabled):', e);
+    }
+    
     let currentFilter = 'all';
 
     // Theme handling
     const getPreferredTheme = () => {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            return savedTheme;
+        try {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                return savedTheme;
+            }
+        } catch (e) {
+            console.warn('Could not read theme from localStorage:', e);
         }
-        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     };
 
     const setTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (e) {
+            console.warn('Could not save theme to localStorage:', e);
+        }
         
         if (theme === 'light') {
             themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
@@ -54,7 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
     dateDisplay.textContent = new Date().toLocaleDateString(undefined, options);
 
     const saveTasks = () => {
-        localStorage.setItem('tasks', JSON.stringify(tasks));
+        try {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        } catch (e) {
+            console.warn('Could not save tasks (localStorage may be full or disabled):', e);
+        }
         updateStats();
     };
 
